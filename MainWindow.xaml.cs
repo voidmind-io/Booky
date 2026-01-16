@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     private readonly ConversionService _conversionService;
     private readonly KindleWebService _kindleService;
     private readonly UpdateService _updateService;
+    private readonly PluginService _pluginService;
     private int _logoClickCount;
     private readonly DispatcherTimer _easterEggResetTimer;
     private readonly ObservableCollection<BookMetadata> _books = new();
@@ -38,6 +39,8 @@ public partial class MainWindow : Window
         _conversionService = new ConversionService();
         _kindleService = new KindleWebService();
         _updateService = new UpdateService();
+        _pluginService = new PluginService();
+        _pluginService.LoadPlugins();
         FileListView.ItemsSource = _books;
 
         // Easter egg timer - resets click count after 2 seconds of no clicks
@@ -441,7 +444,7 @@ public partial class MainWindow : Window
                 OutputPath = dialog.FileName
             };
 
-            await _conversionService.ConvertAsync(options);
+            await _conversionService.ConvertAsync(options, _pluginService);
 
             SetStatus($"Saved: {Path.GetFileName(dialog.FileName)}", isSuccess: true);
 
@@ -528,7 +531,7 @@ public partial class MainWindow : Window
                     OutputPath = outputPath
                 };
 
-                await _conversionService.ConvertAsync(options);
+                await _conversionService.ConvertAsync(options, _pluginService);
                 book.Status = "Done";
                 _lastOutputPath = outputPath;
                 _lastBatchOutputPaths.Add(outputPath);
@@ -603,18 +606,25 @@ public partial class MainWindow : Window
             StatusText.Foreground = (SolidColorBrush)FindResource("TextMutedBrush");
     }
 
-    private static bool IsSupportedFile(string filePath)
+    private bool IsSupportedFile(string filePath)
     {
         var ext = Path.GetExtension(filePath).ToLowerInvariant();
-        return ext == ".mobi" || ext == ".epub";
+        return ext == ".mobi" || ext == ".epub" || _pluginService.IsPluginSupportedFile(filePath);
     }
 
-    private static string GetFileTypeDescription(string extension) => extension switch
+    private string GetFileTypeDescription(string extension)
     {
-        ".mobi" => "Kindle MOBI File",
-        ".epub" => "EPUB File",
-        _ => "Unknown File"
-    };
+        var pluginDescription = _pluginService.GetPluginFileTypeDescription(extension);
+        if (pluginDescription != null)
+            return pluginDescription;
+
+        return extension switch
+        {
+            ".mobi" => "Kindle MOBI File",
+            ".epub" => "EPUB File",
+            _ => "Unknown File"
+        };
+    }
 
     private static string MakeSafeFilename(string name)
     {
