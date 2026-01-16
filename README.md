@@ -2,6 +2,8 @@
 
 A lightweight Windows app that converts MOBI files to EPUB and sends them directly to your Kindle. No Calibre, no email workarounds - just drag and drop.
 
+![Booky Screenshot](Assets/screenshot.png)
+
 ## Features
 
 - **MOBI to EPUB conversion** - Converts Kindle MOBI files to standard EPUB format
