@@ -18,6 +18,8 @@ A lightweight Windows app that converts MOBI files to EPUB and sends them direct
 
 Download the latest installer from the [Releases](https://github.com/voidmind-io/Booky/releases) page.
 
+> **Note:** Windows SmartScreen may show an "Unknown Publisher" warning because the app isn't code-signed. Click **"More info"** → **"Run anyway"** to install.
+
 Or build from source (see below).
 
 ## Usage
