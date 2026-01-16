@@ -51,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Booky-win-x64-installer
-          path: installer/BookySetup.exe
+          path: installer/BookySetup-*.exe
 
   release:
     needs: build
@@ -79,7 +79,7 @@ jobs:
         with:
           files: |
             Booky-portable.zip
-            installer/BookySetup.exe
+            installer/BookySetup-*.exe
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

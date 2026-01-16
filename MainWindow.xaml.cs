@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private readonly List<string> _lastBatchOutputPaths = new();
     private readonly ConversionService _conversionService;
     private readonly KindleWebService _kindleService;
+    private readonly UpdateService _updateService;
     private int _logoClickCount;
     private readonly DispatcherTimer _easterEggResetTimer;
     private readonly ObservableCollection<BookMetadata> _books = new();
@@ -36,6 +37,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _conversionService = new ConversionService();
         _kindleService = new KindleWebService();
+        _updateService = new UpdateService();
         FileListView.ItemsSource = _books;
 
         // Easter egg timer - resets click count after 2 seconds of no clicks
@@ -43,7 +45,7 @@ public partial class MainWindow : Window
         _easterEggResetTimer.Tick += (s, e) => { _logoClickCount = 0; _easterEggResetTimer.Stop(); };
 
         // Enable dark title bar and handle startup file
-        Loaded += (s, e) =>
+        Loaded += async (s, e) =>
         {
             EnableDarkTitleBar();
             UpdateKindleUI();
@@ -52,6 +54,13 @@ public partial class MainWindow : Window
             if (!string.IsNullOrEmpty(App.StartupFilePath))
             {
                 LoadFile(App.StartupFilePath);
+            }
+
+            // Check for updates (non-blocking, fails silently if offline)
+            var updateInfo = await _updateService.CheckForUpdateAsync();
+            if (updateInfo != null)
+            {
+                UpdateDialog.ShowIfAvailable(this, updateInfo);
             }
         };
     }

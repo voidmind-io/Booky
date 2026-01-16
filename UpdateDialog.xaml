@@ -1,0 +1,95 @@
+<Window x:Class="Booky.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Update Available"
+        Width="450"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BackgroundBrush}"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        BorderThickness="1"
+        BorderBrush="{StaticResource AccentBrush}">
+
+    <Border CornerRadius="12" Background="{StaticResource BackgroundBrush}">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Title -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                <TextBlock Text="Update Available"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextBrush}" />
+            </StackPanel>
+
+            <!-- Version info -->
+            <StackPanel Grid.Row="1" Margin="0,0,0,16">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="Current version: "
+                               FontSize="13"
+                               Foreground="{StaticResource TextMutedBrush}" />
+                    <TextBlock x:Name="CurrentVersionText"
+                               Text="2.1.0"
+                               FontSize="13"
+                               Foreground="{StaticResource TextMutedBrush}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="New version: "
+                               FontSize="13"
+                               Foreground="{StaticResource TextBrush}" />
+                    <TextBlock x:Name="NewVersionText"
+                               Text="2.2.0"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SuccessBrush}" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Release notes (optional) -->
+            <Border Grid.Row="2"
+                    x:Name="ReleaseNotesSection"
+                    Background="{StaticResource CardBrush}"
+                    CornerRadius="8"
+                    Padding="12"
+                    Margin="0,0,0,20"
+                    MaxHeight="150"
+                    Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBlock x:Name="ReleaseNotesText"
+                               Text=""
+                               FontSize="12"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               TextWrapping="Wrap" />
+                </ScrollViewer>
+            </Border>
+
+            <!-- Buttons -->
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="Later"
+                        Style="{StaticResource SecondaryButton}"
+                        HorizontalAlignment="Stretch"
+                        Click="LaterButton_Click" />
+
+                <Button Grid.Column="2"
+                        Content="Download Update"
+                        Style="{StaticResource PrimaryButton}"
+                        HorizontalAlignment="Stretch"
+                        Click="DownloadButton_Click" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

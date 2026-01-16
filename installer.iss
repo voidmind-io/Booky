@@ -1,7 +1,7 @@
 ; Booky Installer Script for Inno Setup
 
 #define MyAppName "Booky"
-#define MyAppVersion "2.1.0"
+#define MyAppVersion "2.2.0"
 #define MyAppPublisher "VoidMind"
 #define MyAppURL "https://voidmind.io/"
 #define MyAppExeName "Booky.exe"
@@ -19,7 +19,7 @@ DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=
 OutputDir=installer
-OutputBaseFilename=BookySetup
+OutputBaseFilename=BookySetup-{#MyAppVersion}
 SetupIconFile=Assets\book.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
