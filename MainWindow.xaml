@@ -4,9 +4,10 @@
         Title="Booky · VoidMind"
         Icon="Assets/book.ico"
         Width="500"
-        Height="650"
+        SizeToContent="Height"
         MinWidth="450"
-        MinHeight="500"
+        MinHeight="400"
+        MaxHeight="800"
         Background="{StaticResource BackgroundBrush}"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
@@ -79,6 +80,7 @@
                     BorderThickness="2"
                     CornerRadius="16"
                     Cursor="Hand"
+                    MinHeight="250"
                     MouseLeftButtonUp="DropZone_Click"
                     Style="{x:Null}">
 

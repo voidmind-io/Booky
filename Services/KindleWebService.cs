@@ -370,8 +370,21 @@ public class KindleWebService
             // Ignore
         }
 
-        // Create a new cookie container (can't clear existing one)
-        // Note: This requires restarting the service
+        // Clear cookies from memory by removing Amazon cookies
+        try
+        {
+            var amazonCookies = _cookieContainer.GetCookies(new Uri("https://www.amazon.com"));
+            foreach (Cookie cookie in amazonCookies)
+            {
+                cookie.Expired = true;
+            }
+        }
+        catch
+        {
+            // Ignore
+        }
+
+        _csrfToken = null;
     }
 
     private class CookieData

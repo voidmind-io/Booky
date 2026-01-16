@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         Title="Sign in to Amazon"
-        Width="500" Height="650"
+        Width="1000" Height="750"
+        MinWidth="800" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         Background="#1a1a1a"
         ResizeMode="CanResize">

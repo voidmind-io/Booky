@@ -621,13 +621,14 @@ public partial class MainWindow : Window
         if (_kindleService.IsConfigured)
         {
             // Show logout option
-            var result = System.Windows.MessageBox.Show(
-                "You are logged in to Amazon.\n\nWould you like to log out?",
+            var confirmed = ConfirmDialog.Show(
+                this,
                 "Kindle Settings",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                "You are logged in to Amazon.\n\nWould you like to log out?",
+                "Log out",
+                "Cancel");
 
-            if (result == MessageBoxResult.Yes)
+            if (confirmed)
             {
                 _kindleService.ClearCookies();
                 UpdateKindleUI();
