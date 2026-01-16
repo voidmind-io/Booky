@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\book.ico</ApplicationIcon>
+    <AssemblyName>Booky</AssemblyName>
+    <Version>2.1.0</Version>
+    <Authors>VoidMind</Authors>
+    <Company>VoidMind</Company>
+    <Product>Booky</Product>
+    <Description>Convert MOBI to EPUB and send directly to Kindle</Description>
+    <Copyright>Copyright (c) VoidMind</Copyright>
+    <RepositoryUrl>https://github.com/voidmind-io/Booky</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Single file publish settings -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- HTML Parsing -->
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.61" />
+    <!-- WebView2 for Amazon login -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2739.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include icon assets -->
+    <Resource Include="Assets\book.png" />
+    <Resource Include="Assets\book.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include mobitool and dependencies for MOBI conversion -->
+    <Content Include="Tools\mobitool.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\libmobi.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\libxml2-16.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\zlib1.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\libiconv-2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Tools\COPYING.libmobi">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

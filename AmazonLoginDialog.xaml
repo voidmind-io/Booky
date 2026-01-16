@@ -1,0 +1,47 @@
+<Window x:Class="Booky.AmazonLoginDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Sign in to Amazon"
+        Width="500" Height="650"
+        WindowStartupLocation="CenterOwner"
+        Background="#1a1a1a"
+        ResizeMode="CanResize">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#232323" Padding="15,10">
+            <TextBlock Text="Sign in to your Amazon account to enable Send to Kindle"
+                       Foreground="#cccccc" FontSize="13"/>
+        </Border>
+
+        <!-- WebView2 -->
+        <wv2:WebView2 x:Name="WebView" Grid.Row="1"
+                      NavigationCompleted="WebView_NavigationCompleted"/>
+
+        <!-- Loading overlay -->
+        <Border x:Name="LoadingOverlay" Grid.Row="1" Background="#1a1a1a" Visibility="Visible">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Loading..." Foreground="#888888" FontSize="14"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#232323" Padding="15,10">
+            <Grid>
+                <TextBlock x:Name="StatusText" Text="Please sign in to continue..."
+                           Foreground="#888888" FontSize="12" VerticalAlignment="Center"/>
+                <Button x:Name="CancelButton" Content="Cancel"
+                        HorizontalAlignment="Right"
+                        Padding="20,8" Click="CancelButton_Click"
+                        Style="{DynamicResource ModernButtonStyle}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
