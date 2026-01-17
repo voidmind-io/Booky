@@ -1,7 +1,7 @@
 ; Booky Installer Script for Inno Setup
 
 #define MyAppName "Booky"
-#define MyAppVersion "2.2.0"
+#define MyAppVersion "2.3.0"
 #define MyAppPublisher "VoidMind"
 #define MyAppURL "https://voidmind.io/"
 #define MyAppExeName "Booky.exe"

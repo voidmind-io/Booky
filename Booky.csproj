@@ -9,7 +9,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Assets\book.ico</ApplicationIcon>
     <AssemblyName>Booky</AssemblyName>
-    <Version>2.2.0</Version>
+    <Version>2.3.0</Version>
     <Authors>VoidMind</Authors>
     <Company>VoidMind</Company>
     <Product>Booky</Product>
