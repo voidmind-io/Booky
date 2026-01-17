@@ -102,14 +102,67 @@ public class ConversionService
         return metadata;
     }
 
-    public async Task ConvertAsync(ConversionOptions options)
+    public async Task ConvertAsync(ConversionOptions options, PluginService? pluginService = null)
     {
-        var ext = Path.GetExtension(options.InputPath).ToLowerInvariant();
+        var inputPath = options.InputPath;
+        var ext = Path.GetExtension(inputPath).ToLowerInvariant();
+        string? tempInputPath = null;
 
-        if (ext != ".mobi")
-            throw new NotSupportedException($"Unsupported format: {ext}. Only MOBI files are supported.");
+        try
+        {
+            // Run pre-conversion plugins (e.g., DRM removal)
+            if (pluginService != null)
+            {
+                inputPath = await pluginService.RunPreConversionPluginsAsync(inputPath);
 
-        await ConvertMobiToEpubAsync(options);
+                // Track if plugins created a temp file
+                if (inputPath != options.InputPath)
+                    tempInputPath = inputPath;
+            }
+
+            // Try format plugins first
+            if (pluginService != null)
+            {
+                var pluginResult = await pluginService.ConvertWithPluginAsync(inputPath, options.OutputPath, options.Title, options.Author);
+                if (pluginResult != null)
+                {
+                    if (!pluginResult.Success)
+                        throw new Exception(pluginResult.ErrorMessage ?? "Plugin conversion failed");
+
+                    // Run post-conversion plugins
+                    await pluginService.RunPostConversionPluginsAsync(options.OutputPath);
+                    return;
+                }
+            }
+
+            // Built-in conversion
+            if (ext != ".mobi")
+                throw new NotSupportedException($"Unsupported format: {ext}. Only MOBI files are supported.");
+
+            var modifiedOptions = new ConversionOptions
+            {
+                InputPath = inputPath,
+                OutputPath = options.OutputPath,
+                Title = options.Title,
+                Author = options.Author
+            };
+
+            await ConvertMobiToEpubAsync(modifiedOptions);
+
+            // Run post-conversion plugins
+            if (pluginService != null)
+            {
+                await pluginService.RunPostConversionPluginsAsync(options.OutputPath);
+            }
+        }
+        finally
+        {
+            // Clean up temp file created by pre-conversion plugins
+            if (tempInputPath != null && File.Exists(tempInputPath))
+            {
+                try { File.Delete(tempInputPath); } catch { }
+            }
+        }
     }
 
 
