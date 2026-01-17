@@ -264,7 +264,12 @@ public class ConversionService
             if (process == null)
                 return null;
 
-            process.WaitForExit(5000); // 5 second timeout for cover extraction
+            // Wait with timeout and kill if hung
+            if (!process.WaitForExit(5000))
+            {
+                try { process.Kill(); } catch { }
+                return null;
+            }
 
             var markupDir = Path.Combine(tempDir, "input_markup");
             if (!Directory.Exists(markupDir))
@@ -291,10 +296,16 @@ public class ConversionService
             if (coverFile == null)
                 return null;
 
+            // Load bitmap into memory before temp dir is deleted
+            using var coverStream = File.OpenRead(coverFile);
+            using var memoryStream = new MemoryStream();
+            coverStream.CopyTo(memoryStream);
+            memoryStream.Position = 0;
+
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.UriSource = new Uri(coverFile);
+            bitmap.StreamSource = memoryStream;
             bitmap.EndInit();
             bitmap.Freeze();
 
