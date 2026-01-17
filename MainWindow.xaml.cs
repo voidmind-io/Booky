@@ -224,6 +224,10 @@ public partial class MainWindow : Window
         MultiFilePanel.Visibility = Visibility.Collapsed;
         FilePanel.Visibility = Visibility.Visible;
 
+        // Reset cover
+        CoverImage.Source = null;
+        CoverBorder.Visibility = Visibility.Collapsed;
+
         SetStatus($"Loading: {fileName}...");
 
         if (extension == ".epub")
@@ -241,6 +245,20 @@ public partial class MainWindow : Window
             {
                 // Keep filename-based title
             }
+
+            // Extract cover (run on background thread)
+            _ = Task.Run(() => _conversionService.ExtractEpubCover(filePath))
+                .ContinueWith(t =>
+                {
+                    if (t.Result != null)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            CoverImage.Source = t.Result;
+                            CoverBorder.Visibility = Visibility.Visible;
+                        });
+                    }
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
             // Store for Kindle sending (the EPUB itself is the output)
             _lastOutputPath = filePath;
@@ -273,6 +291,20 @@ public partial class MainWindow : Window
             {
                 SetStatus($"Loaded: {fileName}");
             }
+
+            // Extract cover (run on background thread)
+            _ = Task.Run(() => _conversionService.ExtractMobiCover(filePath))
+                .ContinueWith(t =>
+                {
+                    if (t.Result != null)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            CoverImage.Source = t.Result;
+                            CoverBorder.Visibility = Visibility.Visible;
+                        });
+                    }
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
         else
         {
@@ -325,7 +357,7 @@ public partial class MainWindow : Window
             }
         }
 
-        // Extract metadata for each file
+        // Extract metadata and covers for each file
         foreach (var book in _books)
         {
             try
@@ -337,6 +369,15 @@ public partial class MainWindow : Window
                         book.Title = metadata.Title;
                     if (!string.IsNullOrEmpty(metadata.Author))
                         book.Author = metadata.Author;
+
+                    // Extract cover
+                    var filePath = book.FilePath;
+                    _ = Task.Run(() => _conversionService.ExtractEpubCover(filePath!))
+                        .ContinueWith(t =>
+                        {
+                            if (t.Result != null)
+                                Dispatcher.Invoke(() => book.CoverImage = t.Result);
+                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
                 }
                 else
                 {
@@ -345,6 +386,15 @@ public partial class MainWindow : Window
                         book.Title = metadata.Title;
                     if (!string.IsNullOrEmpty(metadata.Author))
                         book.Author = metadata.Author;
+
+                    // Extract cover
+                    var filePath = book.FilePath;
+                    _ = Task.Run(() => _conversionService.ExtractMobiCover(filePath!))
+                        .ContinueWith(t =>
+                        {
+                            if (t.Result != null)
+                                Dispatcher.Invoke(() => book.CoverImage = t.Result);
+                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
                 }
             }
             catch
