@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Windows.Media.Imaging;
 using Booky.Models;
 using HtmlAgilityPack;
 
@@ -51,6 +52,263 @@ public class ConversionService
         }
 
         return metadata;
+    }
+
+    /// <summary>
+    /// Extract cover image from an EPUB file
+    /// </summary>
+    public BitmapImage? ExtractEpubCover(string inputPath)
+    {
+        try
+        {
+            using var archive = ZipFile.OpenRead(inputPath);
+
+            // Find the OPF file to locate the cover
+            var opfEntry = archive.Entries.FirstOrDefault(e =>
+                e.FullName.EndsWith(".opf", StringComparison.OrdinalIgnoreCase));
+
+            if (opfEntry == null)
+                return null;
+
+            string? coverPath = null;
+            var opfDir = Path.GetDirectoryName(opfEntry.FullName)?.Replace('\\', '/') ?? "";
+
+            using (var stream = opfEntry.Open())
+            using (var reader = new StreamReader(stream))
+            {
+                var opfContent = reader.ReadToEnd();
+
+                // Try multiple patterns to find the cover
+
+                // Pattern 1: properties="cover-image" (EPUB3 standard)
+                var coverMatch = System.Text.RegularExpressions.Regex.Match(
+                    opfContent, @"<item[^>]*properties\s*=\s*[""'][^""']*cover-image[^""']*[""'][^>]*href\s*=\s*[""']([^""']+)[""']",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+
+                if (!coverMatch.Success)
+                {
+                    // Pattern 1b: href before properties
+                    coverMatch = System.Text.RegularExpressions.Regex.Match(
+                        opfContent, @"<item[^>]*href\s*=\s*[""']([^""']+)[""'][^>]*properties\s*=\s*[""'][^""']*cover-image[^""']*[""']",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+                }
+
+                if (!coverMatch.Success)
+                {
+                    // Pattern 2: id="cover" or id="cover-image"
+                    coverMatch = System.Text.RegularExpressions.Regex.Match(
+                        opfContent, @"<item[^>]*id\s*=\s*[""']cover[^""']*[""'][^>]*href\s*=\s*[""']([^""']+)[""']",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+                }
+
+                if (!coverMatch.Success)
+                {
+                    // Pattern 2b: href before id
+                    coverMatch = System.Text.RegularExpressions.Regex.Match(
+                        opfContent, @"<item[^>]*href\s*=\s*[""']([^""']+)[""'][^>]*id\s*=\s*[""']cover[^""']*[""']",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+                }
+
+                if (!coverMatch.Success)
+                {
+                    // Pattern 3: meta name="cover" content="image-id", then find that image
+                    var metaCoverMatch = System.Text.RegularExpressions.Regex.Match(
+                        opfContent, @"<meta[^>]*name\s*=\s*[""']cover[""'][^>]*content\s*=\s*[""']([^""']+)[""']",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                    if (!metaCoverMatch.Success)
+                    {
+                        // Try reversed attribute order
+                        metaCoverMatch = System.Text.RegularExpressions.Regex.Match(
+                            opfContent, @"<meta[^>]*content\s*=\s*[""']([^""']+)[""'][^>]*name\s*=\s*[""']cover[""']",
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    }
+
+                    if (metaCoverMatch.Success)
+                    {
+                        var coverId = metaCoverMatch.Groups[1].Value;
+                        // Find item with this id
+                        coverMatch = System.Text.RegularExpressions.Regex.Match(
+                            opfContent, $@"<item[^>]*id\s*=\s*[""']{System.Text.RegularExpressions.Regex.Escape(coverId)}[""'][^>]*href\s*=\s*[""']([^""']+)[""']",
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+
+                        if (!coverMatch.Success)
+                        {
+                            coverMatch = System.Text.RegularExpressions.Regex.Match(
+                                opfContent, $@"<item[^>]*href\s*=\s*[""']([^""']+)[""'][^>]*id\s*=\s*[""']{System.Text.RegularExpressions.Regex.Escape(coverId)}[""']",
+                                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+                        }
+                    }
+                }
+
+                if (coverMatch.Success)
+                {
+                    coverPath = coverMatch.Groups[1].Value;
+                }
+            }
+
+            if (string.IsNullOrEmpty(coverPath))
+            {
+                // Fallback: look for common cover image names anywhere in the archive
+                var coverEntry = archive.Entries.FirstOrDefault(e =>
+                {
+                    var name = e.Name.ToLowerInvariant();
+                    return name.StartsWith("cover") && (name.EndsWith(".jpg") || name.EndsWith(".jpeg") || name.EndsWith(".png"));
+                });
+
+                if (coverEntry != null)
+                {
+                    return LoadBitmapFromEntry(coverEntry);
+                }
+
+                // Last resort: find any image in Images/covers folder
+                coverEntry = archive.Entries.FirstOrDefault(e =>
+                {
+                    var path = e.FullName.ToLowerInvariant();
+                    var ext = Path.GetExtension(path);
+                    return (path.Contains("cover") || path.Contains("images")) &&
+                           (ext == ".jpg" || ext == ".jpeg" || ext == ".png");
+                });
+
+                if (coverEntry != null)
+                {
+                    return LoadBitmapFromEntry(coverEntry);
+                }
+
+                return null;
+            }
+
+            // Resolve relative path from OPF location
+            var fullCoverPath = string.IsNullOrEmpty(opfDir)
+                ? coverPath
+                : $"{opfDir}/{coverPath}";
+
+            // Normalize path
+            fullCoverPath = fullCoverPath.Replace('\\', '/').TrimStart('/');
+
+            var foundEntry = archive.Entries.FirstOrDefault(e =>
+                e.FullName.Replace('\\', '/').Equals(fullCoverPath, StringComparison.OrdinalIgnoreCase));
+
+            // If not found, try without the OPF directory prefix
+            if (foundEntry == null)
+            {
+                foundEntry = archive.Entries.FirstOrDefault(e =>
+                    e.FullName.Replace('\\', '/').EndsWith(coverPath, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (foundEntry == null)
+                return null;
+
+            return LoadBitmapFromEntry(foundEntry);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static BitmapImage? LoadBitmapFromEntry(ZipArchiveEntry entry)
+    {
+        try
+        {
+            using var coverStream = entry.Open();
+            using var memoryStream = new MemoryStream();
+            coverStream.CopyTo(memoryStream);
+            memoryStream.Position = 0;
+
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = memoryStream;
+            bitmap.EndInit();
+            bitmap.Freeze();
+
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Extract cover image from a MOBI file using mobitool
+    /// </summary>
+    public BitmapImage? ExtractMobiCover(string inputPath)
+    {
+        var toolPath = FindMobiTool();
+        if (toolPath == null)
+            return null;
+
+        // Create temp directory for extraction
+        var tempDir = Path.Combine(Path.GetTempPath(), $"booky_cover_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var tempMobiPath = Path.Combine(tempDir, "input.mobi");
+            File.Copy(inputPath, tempMobiPath);
+
+            // Run mobitool to dump source files (includes cover)
+            var psi = new ProcessStartInfo
+            {
+                FileName = toolPath,
+                Arguments = $"-s \"{tempMobiPath}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(psi);
+            if (process == null)
+                return null;
+
+            process.WaitForExit(5000); // 5 second timeout for cover extraction
+
+            var markupDir = Path.Combine(tempDir, "input_markup");
+            if (!Directory.Exists(markupDir))
+                return null;
+
+            // Look for cover image - mobitool typically extracts it as cover.jpg or similar
+            var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var coverFile = Directory.GetFiles(markupDir)
+                .FirstOrDefault(f =>
+                {
+                    var name = Path.GetFileNameWithoutExtension(f).ToLowerInvariant();
+                    var ext = Path.GetExtension(f).ToLowerInvariant();
+                    return imageExtensions.Contains(ext) &&
+                           (name.Contains("cover") || name == "image00000" || name == "image00001");
+                });
+
+            // If no cover found, try the first image
+            if (coverFile == null)
+            {
+                coverFile = Directory.GetFiles(markupDir)
+                    .FirstOrDefault(f => imageExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()));
+            }
+
+            if (coverFile == null)
+                return null;
+
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.UriSource = new Uri(coverFile);
+            bitmap.EndInit();
+            bitmap.Freeze();
+
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+        finally
+        {
+            // Cleanup
+            try { Directory.Delete(tempDir, true); } catch { }
+        }
     }
 
     /// <summary>
@@ -123,7 +381,7 @@ public class ConversionService
             // Try format plugins first
             if (pluginService != null)
             {
-                var pluginResult = await pluginService.ConvertWithPluginAsync(inputPath, options.OutputPath, options.Title, options.Author);
+                var pluginResult = await pluginService.ConvertWithPluginAsync(inputPath, options.OutputPath, options.Title, options.Author ?? "");
                 if (pluginResult != null)
                 {
                     if (!pluginResult.Success)

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Windows.Media.Imaging;
 
 namespace Booky.Models;
 
@@ -10,6 +11,7 @@ public class BookMetadata : INotifyPropertyChanged
     private string? _fileName;
     private string? _status;
     private bool _isEpub;
+    private BitmapImage? _coverImage;
 
     public string? Title
     {
@@ -45,6 +47,12 @@ public class BookMetadata : INotifyPropertyChanged
     {
         get => _isEpub;
         set { _isEpub = value; OnPropertyChanged(nameof(IsEpub)); }
+    }
+
+    public BitmapImage? CoverImage
+    {
+        get => _coverImage;
+        set { _coverImage = value; OnPropertyChanged(nameof(CoverImage)); }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
