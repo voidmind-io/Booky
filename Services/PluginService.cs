@@ -77,9 +77,9 @@ public class PluginService
             {
                 plugin.Shutdown();
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore shutdown errors
+                System.Diagnostics.Debug.WriteLine($"Failed to shut down plugin {plugin.Name}: {ex.Message}");
             }
         }
         _plugins.Clear();
@@ -101,8 +101,9 @@ public class PluginService
     /// </summary>
     public string? GetPluginFileTypeDescription(string extension)
     {
-        var formatPlugin = FormatPlugins.FirstOrDefault(p => p.SupportedExtensions.Contains(extension.ToLowerInvariant()));
-        return formatPlugin?.GetFileTypeDescription(extension);
+        var normalizedExtension = extension.ToLowerInvariant();
+        var formatPlugin = FormatPlugins.FirstOrDefault(p => p.SupportedExtensions.Contains(normalizedExtension));
+        return formatPlugin?.GetFileTypeDescription(normalizedExtension);
     }
 
     /// <summary>

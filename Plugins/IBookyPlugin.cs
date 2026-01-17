@@ -53,7 +53,8 @@ public interface IPreConversionPlugin : IBookyPlugin
     /// </summary>
     /// <param name="inputPath">Path to the input file</param>
     /// <param name="outputPath">Path where processed file should be written</param>
-    /// <returns>True if processing succeeded, false to skip this plugin</returns>
+    /// <returns>PluginResult with Success=true and OutputPath set if file was processed,
+    /// or PluginResult.Skip() if this plugin chose not to process the file</returns>
     Task<PluginResult> ProcessAsync(string inputPath, string outputPath);
 }
 

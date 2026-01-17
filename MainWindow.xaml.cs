@@ -66,6 +66,9 @@ public partial class MainWindow : Window
                 UpdateDialog.ShowIfAvailable(this, updateInfo);
             }
         };
+
+        // Cleanup plugins on close
+        Closing += (s, e) => _pluginService.UnloadPlugins();
     }
 
     private void UpdateKindleUI()
